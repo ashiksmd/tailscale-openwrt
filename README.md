@@ -10,7 +10,7 @@ This repository tracks the latest upstream Tailscale release, builds a compresse
 ## How it works
 
 - `upstream-version.txt` stores the upstream Tailscale tag to build.
-- `.github/workflows/update-upstream-version.yml` checks for the latest upstream Tailscale release and updates `upstream-version.txt` when it changes.
+- `.github/workflows/check-tailscale-release.yml` checks for the latest upstream Tailscale release and updates `upstream-version.txt` when it changes.
 - `.github/workflows/new-release.yml` runs when `upstream-version.txt` changes, rebuilds the release artifacts, and creates a GitHub release tagged with that version.
 - `repack-openwrt-ipk.sh` downloads the latest `tailscale` IPK from the OpenWrt package feed and replaces the bundled `tailscaled` binary with a stub.
 
