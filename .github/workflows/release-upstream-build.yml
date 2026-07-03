@@ -1,0 +1,76 @@
+name: Release Upstream Build
+
+on:
+  push:
+    paths:
+      - upstream-version.txt
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Read upstream version
+        id: version
+        run: |
+          version="$(tr -d '\n' < upstream-version.txt)"
+          if [[ -z "$version" ]]; then
+            echo "upstream-version.txt is empty" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Repack OpenWrt IPK
+        id: ipk
+        run: |
+          chmod +x ./repack-openwrt-ipk.sh
+          package="$(./repack-openwrt-ipk.sh)"
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+
+      - name: Check out tailscale
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: tailscale/tailscale
+          ref: ${{ steps.version.outputs.version }}
+          path: tailscale
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: tailscale/go.mod
+
+      - name: Build tailscale multicall binary
+        working-directory: tailscale
+        env:
+          GOOS: linux
+          GOARCH: arm64
+        run: ./build_dist.sh --extra-small -o ../tailscale.multicall -tags ts_include_cli ./cmd/tailscaled
+
+      - name: Install UPX
+        run: |
+          if ! command -v upx >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y upx-ucl
+          fi
+
+      - name: Compress tailscale multicall binary
+        run: upx --lzma --best ./tailscale.multicall
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          files: |
+            ${{ steps.ipk.outputs.package }}
+            tailscale.multicall
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
