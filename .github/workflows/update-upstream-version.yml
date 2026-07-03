@@ -1,0 +1,40 @@
+name: Update Upstream Version
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-upstream-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Fetch latest tailscale release
+        id: update
+        env:
+          RELEASES_URL: https://api.github.com/repos/tailscale/tailscale/releases/latest
+        run: |
+          latest_version="$(curl -fsSL "$RELEASES_URL" | python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
+          printf '%s\n' "$latest_version" > upstream-version.txt
+
+          if git diff --quiet -- upstream-version.txt; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=$latest_version" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit updated version
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add upstream-version.txt
+          git commit -m "chore: update upstream Tailscale version to ${{ steps.update.outputs.version }}"
+          git push
