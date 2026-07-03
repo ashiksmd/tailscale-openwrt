@@ -1,11 +1,11 @@
 # tailscale-openwrt
 
-Automated Tailscale builds for OpenWrt 24.10.
+Automated Tailscale builds for OpenWrt 24.10 on arm64
 
-This repository tracks the latest upstream Tailscale release, builds a compressed `tailscale.multicall` binary for `linux/arm64`, and publishes release assets containing:
+On devices with 16 MB of flash or less, the stock Tailscale package and its dependencies can take up too much space.
+Tailscale's build system provides a `multicall` target that lets `tailscale` and `tailscaled` share a single binary, which cuts the storage footprint significantly. To shrink it further, this project strips debug symbols and compresses the resulting binary with `upx`.
 
-- A stub OpenWrt `tailscale` IPK based on the latest package available in the OpenWrt 24.10 feed
-- A `tailscale.multicall` binary built from the upstream Tailscale tag recorded in `upstream-version.txt`
+To preserve normal OpenWrt package behavior, this repository also republishes the OpenWrt `tailscale.ipk` with a stubbed `tailscaled` binary. That keeps the package metadata, init script integration, and `opkg` state intact while still letting the system run the smaller `tailscale.multicall` binary.
 
 ## How it works
 
