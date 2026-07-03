@@ -1,4 +1,4 @@
-name: Release Upstream Build
+name: New Release
 
 on:
   push:
