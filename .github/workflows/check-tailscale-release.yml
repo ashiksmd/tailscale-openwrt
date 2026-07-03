@@ -1,4 +1,4 @@
-name: Update Upstream Version
+name: Check for Tailscale release
 
 on:
   schedule:
