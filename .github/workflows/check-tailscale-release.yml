@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  update-upstream-version:
+  check-tailscale-version:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
