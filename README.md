@@ -10,8 +10,8 @@ To preserve normal OpenWrt package behavior, this repository also republishes th
 ## How it works
 
 - `upstream-version.txt` stores the upstream Tailscale tag to build.
-- `.github/workflows/check-tailscale-release.yml` checks for the latest upstream Tailscale release and updates `upstream-version.txt` when it changes.
-- `.github/workflows/new-release.yml` runs when `upstream-version.txt` changes, rebuilds the release artifacts, and creates a GitHub release tagged with that version.
+- `.github/workflows/check-tailscale-release.yml` checks for the latest upstream Tailscale release, updates `upstream-version.txt` when it changes, and explicitly dispatches the release workflow on the same branch after a successful push. This uses the built-in `GITHUB_TOKEN` with `contents: write` and `actions: write`; no PAT is needed because the explicit dispatch avoids GitHub's suppression of push-triggered workflows for commits made with `GITHUB_TOKEN`.
+- `.github/workflows/new-release.yml` runs when dispatched by the checker, manually dispatched, or triggered by an eligible push changing `upstream-version.txt`. It rebuilds the release artifacts and creates a GitHub release tagged with that version.
 - `repack-openwrt-ipk.sh` downloads the latest `tailscale` IPK from the OpenWrt package feed and replaces the bundled `tailscaled` binary with a stub.
 
 ## Install
