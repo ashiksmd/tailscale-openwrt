@@ -20,8 +20,13 @@ jobs:
         id: update
         env:
           RELEASES_URL: https://api.github.com/repos/tailscale/tailscale/releases/latest
+          GH_TOKEN: ${{ github.token }}
         run: |
-          latest_version="$(curl -fsSL "$RELEASES_URL" | python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
+          release_json="$(curl --fail-with-body -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$RELEASES_URL")"
+          latest_version="$(printf '%s' "$release_json" | python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
           printf '%s\n' "$latest_version" > upstream-version.txt
 
           if git diff --quiet -- upstream-version.txt; then
