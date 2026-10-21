@@ -14,6 +14,8 @@ To preserve normal OpenWrt package behavior, this repository also republishes th
 - `.github/workflows/new-release.yml` runs when dispatched by the checker, manually dispatched, or triggered by an eligible push changing `upstream-version.txt`. It rebuilds the release artifacts and creates a GitHub release tagged with that version.
 - `repack-openwrt-ipk.sh` downloads the latest `tailscale` IPK from the OpenWrt package feed and replaces the bundled `tailscaled` binary with a stub.
 
+Both workflows pin their runners to Ubuntu 24.04 to avoid automatic OS migrations. The release workflow caches Go dependencies using `tailscale/go.sum` from the upstream checkout.
+
 ## Install
 
 Download the release assets for your target version and copy both files to the router.
